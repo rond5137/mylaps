@@ -1,4 +1,5 @@
 import psycopg2
+from utils import timer
 
 
 class DBConnector:
@@ -20,46 +21,69 @@ class DBConnector:
         except psycopg2.OperationalError as err:
             print(err)
 
-
     def __del__(self):
         self.conn.close()
-        print('connection closed')
+        print('db connection closed')
 
-    def insert(self, messages: list):
-
-        for m in messages:
-            pass
+    @timer
+    def insert(self, message_type: str, location: str, messages: list):
+        if message_type == 'Marker':
+            table = 'markers'
+        elif message_type == 'Passing':
+            table = 'passings'
+        else:
+            return None
+        for message in messages:
+            self.cursor.execute(f'''
+            insert into {table} (location,{",".join(message.keys())})
+            values ('{location}',{",".join([str(f"'{m}'") for m in message.values()])})
+            ''')
+        self.conn.commit()
 
     def _create_tables(self):
-
         self.cursor.execute(f'''
         create table IF NOT EXISTS passings
         (
-            id serial  not null
-                constraint passings_pk
-                    primary key,
-            c  char(7) not null,
-            ct char(2) not null,
-            t  time    not null,
-            d  date    not null,
-            l  integer not null,
-            dv integer not null,
-            re integer not null,
-            an char(8) not null,
-            g  integer not null,
-            n  char(1024)
+            id serial not null constraint passings_pk primary key,
+            location    char(1024),
+            c           char(7),
+            ct          char(2),
+            t           char(512),
+            ts          char(512),
+            d           char(512),
+            l           char(512),
+            dv          char(512),
+            re          char(512),
+            an          char(8),
+            am          char(512),
+            ans         char(512),
+            ana         char(512),
+            dm          char(512),
+            g           char(512),
+            h           char(512),
+            n           char(1024),
+            b           char(512),
+            bid         char(512)
         );
         
-        alter table passings
-            owner to {self.user};
-        
-        create unique index IF NOT EXISTS passings_id_uindex
-            on passings (id);
+        alter table passings owner to {self.user};
+        create unique index IF NOT EXISTS passings_id_uindex on passings (id);
         ''')
 
-
+        self.cursor.execute(f'''
+        create table IF NOT EXISTS markers
+        (
+            id serial not null constraint markers_pk primary key,
+            location    char(1024),
+            mt          char(1024),
+            t           char(512),
+            n           char(1024)
+        );
+        
+        alter table markers owner to {self.user};
+        create unique index IF NOT EXISTS markers_id_uindex on markers (id);
+        ''')
         self.conn.commit()
-
 
     def _create_db(self):
         pass

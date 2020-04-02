@@ -1,5 +1,4 @@
 import socket
-import keyboard
 
 sock = socket.socket()
 sock.bind(('', 3097))

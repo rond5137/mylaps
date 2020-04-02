@@ -3,6 +3,7 @@ import logging
 import concurrent.futures
 from messages import Message
 from db_connector import DBConnector
+from utils import timer
 
 
 class EchoServer:
@@ -24,19 +25,25 @@ class EchoServer:
         if and_loop:
             self._loop.close()
 
+    # @timer
     async def handle_connection(self, reader, writer):
         peername = writer.get_extra_info('peername')
         logging.info('Accepted connection from {}'.format(peername))
         while not reader.at_eof():
             try:
-                data = await asyncio.wait_for(reader.readline(), timeout=10.0)
-                print(f'<<< {data}')
+                data = await asyncio.wait_for(reader.readline(), timeout=3600.0)
+                # print(f'<<< {data}')
                 if not data:
                     break
                 msg = Message(self.server_name)
                 parsed_response = msg.get(data)
+                self.db.insert(
+                    parsed_response['type'],
+                    parsed_response['location'],
+                    parsed_response['data']
+                )
                 if resp:=msg.response:
-                    print(f'>>> {resp}')
+                    # print(f'>>> {resp}')
                     writer.write(resp)
             except (concurrent.futures.TimeoutError, asyncio.exceptions.TimeoutError):
                 continue
