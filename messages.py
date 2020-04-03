@@ -1,3 +1,4 @@
+import logging
 
 
 class Message:
@@ -21,31 +22,26 @@ class Message:
         return_data = {
             'type': self.message_type,
             'location': self.location,
-            # 'count': len(self.message_data),
+            'count': len(self.message_data),
             'data': self.message_data
         }
         return return_data
 
     def _parse_message(self):
-
-        splitted_msg: list = self.message.split('@')
-        # print(f'{splitted_msg=}\n')
-
-        self.location = splitted_msg[0]
-        self.message_type = splitted_msg[1]
-        self.message_number = splitted_msg[-2]
-        # print(f'{self.message_number=}')
-
-        raw_message_data = list(splitted_msg[2:-2])
-
-        for i in raw_message_data:
-            d = {}
-            for ii in i.split('|'):
-                k, v = ii.split('=')
-                d[k] = v
-            self.message_data.append(d)
-
-        # print(f'{self.message_data=}\n')
+        try:
+            splitted_msg: list = self.message.split('@')
+            self.location = splitted_msg[0]
+            self.message_type = splitted_msg[1]
+            self.message_number = splitted_msg[-2]
+            raw_message_data = list(splitted_msg[2:-2])
+            for i in raw_message_data:
+                d = {}
+                for ii in i.split('|'):
+                    k, v = ii.split('=')
+                    d[k] = v
+                self.message_data.append(d)
+        except Exception as e:
+            logging.error(f'Message parsing error - {e}')
 
     @property
     def response(self) -> bytes or None:

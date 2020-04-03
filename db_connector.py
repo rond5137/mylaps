@@ -1,31 +1,25 @@
 import psycopg2
-from utils import timer
+import logging
 
 
 class DBConnector:
-    dbname = 'mylaps_test'
-    user = 'rond'
-    password = '5137'
-    host = 'localhost'
-
-    def __init__(self):
+    def __init__(self, db_name, db_user, db_password, db_host):
+        self.user = db_user
         try:
             self.conn = psycopg2.connect(
-                dbname=self.dbname,
-                user=self.user,
-                password=self.password,
-                host=self.host
+                dbname=db_name,
+                user=db_user,
+                password=db_password,
+                host=db_host
             )
             self.cursor = self.conn.cursor()
             self._create_tables()
         except psycopg2.OperationalError as err:
-            print(err)
+            logging.error(err)
 
     def __del__(self):
         self.conn.close()
-        print('db connection closed')
 
-    @timer
     def insert(self, message_type: str, location: str, messages: list):
         if message_type == 'Marker':
             table = 'markers'
@@ -88,9 +82,9 @@ class DBConnector:
     def _create_db(self):
         pass
         # CREATE DATABASE mylaps_test
-#   WITH OWNER = postgres
-#        ENCODING = 'UTF8'
-#        TABLESPACE = pg_default
-#        LC_COLLATE = 'ru_RU.UTF-8'
-#        LC_CTYPE = 'ru_RU.UTF-8'
-#        CONNECTION LIMIT = -1;
+        #   WITH OWNER = postgres
+        #        ENCODING = 'UTF8'
+        #        TABLESPACE = pg_default
+        #        LC_COLLATE = 'ru_RU.UTF-8'
+        #        LC_CTYPE = 'ru_RU.UTF-8'
+        #        CONNECTION LIMIT = -1;
